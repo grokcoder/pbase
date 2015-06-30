@@ -1,0 +1,25 @@
+
+# Mobile Tools for Java (J2ME)
+
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+/.arc_jira_lib
+/.externalToolBuilders
+.project
+*.settings/
+.classpath
+/build
+.idea/*
+/logs
+*target/
+*.iml
+*.orig
+*~
+hbase-*/test
+*.iws
+*.ipr
+patchprocess/
