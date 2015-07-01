@@ -16,7 +16,7 @@ public class Matcher {
 
     public Matcher(String tableName, TableSchema schema){
         this.tableName = TableName.valueOf(tableName);
-        Scan scan = new Scan();
+        scan = new Scan();
         if(schema == null){
             scan.setAttribute(HConstants.SCHEMA, "empty".getBytes());
         }else {
@@ -27,7 +27,7 @@ public class Matcher {
 
 
     public Matcher setStartRow(byte[] startRow){
-        scan.setStopRow(startRow);
+        scan.setStartRow(startRow);
         return this;
     }
 

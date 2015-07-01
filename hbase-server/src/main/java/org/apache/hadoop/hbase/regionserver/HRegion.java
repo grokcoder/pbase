@@ -1819,7 +1819,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
         }
         final long startTime = EnvironmentEdgeManager.currentTime();
         // If nothing to flush, return, but we need to safely update the region sequence id
-        if (this.memstoreSize.get() <= 0) {
+        if (this.memstoreSize.get() <= 0 ) {
             // Take an update lock because am about to change the sequence id and we want the sequence id
             // to be at the border of the empty memstore.
             MultiVersionConsistencyControl.WriteEntry w = null;
@@ -7071,6 +7071,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
             List<Cell> top = this.heap.peek();
             if(top == null) return true;
             else {
+                if(stopRow == null) return false;
                 byte [] topRow = top.get(0).getRow();
                 return Bytes.compareTo(row, topRow) == 0;
             }
@@ -7117,8 +7118,9 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
 
             boolean hasMore = this.heap.hasNext();
 
-            if(hasMore == false) return false;
-            else if(stopRow != null){
+            if(hasMore == false)
+                return false;
+            if(stopRow != null){
                 List<Cell> cells = this.heap.peek();
                 byte[] row = cells.get(0).getRow();
 
@@ -7126,6 +7128,8 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
                     close();
                     return false;
                 }
+            }else {
+                return true;
             }
             return hasMore;
         }

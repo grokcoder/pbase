@@ -319,18 +319,23 @@ public class PFileReader implements PFile.Reader{
          * @param rowkey
          */
         public void seek(byte[] rowkey) {
-
+            boolean seekEd = false;
             if(rowkey != null) {
                 Group group = curr == null ? reader.readGroup() : curr;
                 while (group != null) {
                     byte[] key = group.getBinary(ROW_KEY, 0).getBytes();
-                    if (Bytes.compareTo(key, rowkey) < 0) {
+                    if (Bytes.compareTo(key, rowkey) >= 0) {
+                        seekEd = true;
+                        break;
+                    }else {
                         curr = group;
                         next = reader.readGroup();
                         group = next;
-                    }else {
-                        break;
                     }
+                }
+                if(!seekEd){
+                    curr = null;
+                    next = null;
                 }
             }else {
                 curr = reader.readGroup();

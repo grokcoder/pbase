@@ -58,13 +58,17 @@ public class ParquetReadUtil {
 
         List<RecordScanner> scanners = new LinkedList<>();
         for(Path file : paths){
-            PFileReader reader = new PFileReader(file, new Configuration(), schema);
+            try {
+                PFileReader reader = new PFileReader(file, new Configuration(), schema);
 
-            System.out.println("Start Key : " + Bytes.toInt(reader.getStartKey()));
-            System.out.println("End KEY : " + Bytes.toInt(reader.getEndKey()));
+                System.out.println("Start Key : " + Bytes.toInt(reader.getStartKey()));
+                System.out.println("End KEY : " + Bytes.toInt(reader.getEndKey()));
 
-            RecordScanner scanner = reader.getScanner();
-            scanners.add(scanner);
+                RecordScanner scanner = reader.getScanner();
+                scanners.add(scanner);
+            }catch (IOException ioe){
+
+            }
         }
 
         return scanners;

@@ -3,6 +3,7 @@ package org.apache.hadoop.hbase.regionserver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -108,14 +109,16 @@ public class PStoreScanner implements RecordScanner{
             result = heap.next();
             byte [] row = result.get(0).getRow();
 
-            if(scan.getStopRow() != null && Bytes.compareTo(row, scan.getStopRow()) >= 0){// judge whether the curr row is bigger than stop row of scan
-                this.hasNext = false;
-                this.close();
-                return null;
-            }else {
+            if(scan.getStopRow() == null ||  Bytes.equals(scan.getStopRow(), HConstants.EMPTY_BYTE_ARRAY)){
                 this.hasNext = heap.hasNext();
                 if(hasNext == false){
                     this.close();
+                }
+            }else {
+                if(Bytes.compareTo(row, scan.getStopRow()) >= 0){
+                    this.hasNext = false;
+                    this.close();
+                    return null;
                 }
             }
 

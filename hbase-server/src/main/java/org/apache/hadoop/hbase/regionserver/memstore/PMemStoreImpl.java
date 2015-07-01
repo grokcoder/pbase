@@ -303,14 +303,24 @@ public class PMemStoreImpl implements PMemStore{
          * @param row
          */
         public void seek(byte[] row){
-            curr = row;
+            if(row == null) return;
+
             Set<byte []> rows = rowInMem.keySet();
             it = rows.iterator();
+            boolean seekEd = false;
             while (it.hasNext()){
-                if(Bytes.compareTo(it.next(), row) < 0){
-                    next = it.hasNext() ? it.next() : null;
+                curr = it.next();
+                if(Bytes.compareTo(curr, row) >= 0){
+                    seekEd = true;
                     break;
                 }
+            }
+            if(it.hasNext()){
+                next = it.next();
+            }
+            if(!seekEd){//查询数据不再该范围
+                curr = null;
+                next = null;
             }
 
         }
@@ -480,6 +490,7 @@ public class PMemStoreImpl implements PMemStore{
 
 
         RowScanner rowScanner = snapshot.getScanner();
+        rowScanner.seek(Bytes.toBytes(10));
 
         //rowScanner.seek(Bytes.toBytes(0));
         while (rowScanner.hasNext()){
