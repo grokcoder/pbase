@@ -1,7 +1,8 @@
-package main.parquet;
+package org.apache.hadoop.hbase.regionserver.pbase.util;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HConstants;
 import parquet.column.ParquetProperties;
 import parquet.example.data.Group;
 import parquet.example.data.simple.SimpleGroupFactory;
@@ -12,29 +13,35 @@ import parquet.schema.MessageType;
 import parquet.schema.MessageTypeParser;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by wangxiaoyi on 15/6/10.
+ * Created by wangxiaoyi on 15/7/2.
  *
- * help parquet write in test
+ * generate some parquet file
+ * for testing the scanners
+ *
+ * 1.generate 10 separate files
+ * 2.each file contains 50 record
+ * 3.each file record sorted by row key
+ * 4.row key ranges from 1 to 500
  *
  */
-public class ParquetWriteUtil {
+public class GenerateParquetFile {
 
 
-    public static Path root = new Path("hdfs://10.214.208.11:9000/parquet/");
+    public static Path root = new Path("hdfs://localhost:9000/parquet/");
 
     public static Configuration conf = new Configuration();
 
     public static MessageType schema = MessageTypeParser.parseMessageType(
             " message people { " +
-
                     "required binary rowkey;" +
                     "required binary cf:name;" +
                     "required binary cf:age;" +
+                    "required binary cf:job;" +
                     "required int64 timestamp;" +
-
                     " }"
     );
 
@@ -46,13 +53,9 @@ public class ParquetWriteUtil {
     }
 
 
-    public static Map<String, String> initMeta(Map<String, String> metas){
-        return metas;
-    }
-
 
     public static ParquetWriter<Group> initWriter(String fileName, Map<String, String> metas)
-    throws IOException{
+            throws IOException{
 
 
         GroupWriteSupport.setSchema(schema, conf);
@@ -61,7 +64,7 @@ public class ParquetWriteUtil {
         ParquetWriter<Group> writer = new ParquetWriter<Group>(
                 initFile(fileName),
                 new GroupWriteSupport(metas),
-                CompressionCodecName.UNCOMPRESSED,
+                CompressionCodecName.SNAPPY,
                 1024,
                 1024,
                 512,
@@ -74,32 +77,37 @@ public class ParquetWriteUtil {
     }
 
 
+    public static String genRowKey(String format, int i){
+        return String.format(format, i);
+    }
+
+    public static void main(String []args) throws IOException{
 
 
-
-    public static void main(String[] args) throws IOException {
-
-
-        int fileNum = 10;
-        int fileRecordNum = 1000;
+        int fileNum = 10;   //num of files constructed
+        int fileRecordNum = 50; //record num of each file
         int rowKey = 0;
-        for(int i = 0; i < fileNum; ++ i ) {//构造10个文件
+        for(int i = 0; i < fileNum; ++ i ) {
 
-            ParquetWriter<Group> writer = initWriter("hbase/table" + i, null);
+            Map<String, String> metas = new HashMap<>();
+            metas.put(HConstants.START_KEY, genRowKey("%10d", rowKey + 1));
+            metas.put(HConstants.END_KEY, genRowKey("%10d", rowKey + fileRecordNum));
 
-            for (int j = 0;  j < fileRecordNum; ++j) {//不同文件记录
+            ParquetWriter<Group> writer = initWriter("pfile/scanner_test_file" + i, metas);
+
+            for (int j = 0;  j < fileRecordNum; ++j) {
                 rowKey ++;
-                Group group = sfg.newGroup().append("rowkey", "r" + rowKey)
+                Group group = sfg.newGroup().append("rowkey", genRowKey("%10d", rowKey))
                         .append("cf:name", "wangxiaoyi" + rowKey)
-                        .append("cf:age", "24")
+                        .append("cf:age", String.format("%10d", rowKey))
+                        .append("cf:job", "student")
                         .append("timestamp", System.currentTimeMillis());
                 writer.write(group);
             }
 
             writer.close();
         }
-
-
-
     }
+
+
 }

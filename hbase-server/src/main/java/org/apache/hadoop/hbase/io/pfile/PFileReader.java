@@ -165,7 +165,7 @@ public class PFileReader implements PFile.Reader{
         if(reader != null)
             return  reader.getTotalCountLeft();
         else
-            return -1l;
+            return 0l;
     }
 
 
@@ -179,100 +179,13 @@ public class PFileReader implements PFile.Reader{
 
 
     /**
-     * small tests
-     * @param args
-     */
-    public static void main(String []args) throws IOException{
-
-        Path root = new Path("hdfs://10.214.208.11:9000/parquet/");//文件夹路径
-
-        Configuration configuration = new Configuration();
-
-        MessageType schema = MessageTypeParser.parseMessageType( //parquet文件模式
-
-                " message people { " +
-
-                        "required binary rowkey;" +
-                        "required binary cf:name;" +
-                        "required binary cf:age;" +
-                        "required int64 timestamp;"+
-                        " }");
-
-        GroupWriteSupport.setSchema(schema, configuration);
-
-        SimpleGroupFactory sfg = new SimpleGroupFactory(schema);
-        Path file = new Path(root, "hbase_people3.snappy.parquet");
-
-        Map<String, String> meta = new HashMap<String, String>();
-        meta.put("startkey", "1");
-        meta.put("endkey", "2");
-
-
-/*
-        ParquetWriter<Group> writer = new ParquetWriter<Group>(
-                file,
-                new GroupWriteSupport(meta),
-                CompressionCodecName.UNCOMPRESSED,
-                1024,
-                1024,
-                512,
-                true,
-                false,
-                ParquetProperties.WriterVersion.PARQUET_1_0,
-                configuration);
-
-        for(int i = 0 ; i< 1000000; ++i){
-            Group group = sfg.newGroup().append("rowkey", Binary.fromString("r" + i))
-                    .append("cf:name", "wangxiaoyi")
-                    .append("cf:age", "24")
-                    .append("timestamp", System.currentTimeMillis());
-            writer.write(group);
-        }
-
-        writer.close();
-*/
-
-
-
-
-        PFileReader reader = new PFileReader(
-                file,
-                new Configuration(),
-                schema);
-
-        ParquetFileInfo fileInfo = reader.getFileInfo();
-        FileMetaData metaData = fileInfo.getFileMetaData();
-        System.out.println(metaData.toString());
-
-        InternalRecordScanner scanner = reader.getScanner();
-        System.out.print("record count : " + scanner.getRecordCount());
-        while (scanner.hasNext()){
-            List<Cell> cells = scanner.next();
-            for(Cell cell : cells){
-                System.out.print(Bytes.toString(cell.getRow()) + ": " + Bytes.toString(cell.getFamily())
-                + " : " + Bytes.toString(cell.getQualifier()) + " " + Bytes.toString(cell.getValue())
-                + " " + cell.getTimestamp());
-                System.out.println();
-            }
-            System.out.println("rest result count : " + scanner.getMaxResultsCount());
-
-        }
-        scanner.close();
-
-
-
-
-    }
-
-
-    /**
      * transform data in group into cells(List<cell> - > {@link org.apache.hadoop.hbase.client.Result}</>)
      * @param group
      * @return
      */
     public static List<Cell> groupToCells(Group group){
 
-        List<Cell> cells = null;
+        List<Cell> cells = new LinkedList<>();
         if(group != null){
             cells = new LinkedList<>();
             GroupType groupType = group.getType();
@@ -321,16 +234,14 @@ public class PFileReader implements PFile.Reader{
         public void seek(byte[] rowkey) {
             boolean seekEd = false;
             if(rowkey != null) {
-                Group group = curr == null ? reader.readGroup() : curr;
-                while (group != null) {
-                    byte[] key = group.getBinary(ROW_KEY, 0).getBytes();
+                while (curr != null) {
+                    byte[] key = curr.getBinary(ROW_KEY, 0).getBytes();
                     if (Bytes.compareTo(key, rowkey) >= 0) {
                         seekEd = true;
                         break;
                     }else {
-                        curr = group;
+                        curr = next;
                         next = reader.readGroup();
-                        group = next;
                     }
                 }
                 if(!seekEd){
@@ -400,7 +311,10 @@ public class PFileReader implements PFile.Reader{
          */
         @Override
         public long getMaxResultsCount() {
-            return reader.getMaxResultLeft();
+            int add = 0;
+            if(curr != null) add ++;
+            if(next != null) add ++;
+            return reader.getMaxResultLeft() + add;
         }
 
         /**

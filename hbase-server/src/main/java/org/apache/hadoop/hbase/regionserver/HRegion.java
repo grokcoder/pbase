@@ -7118,18 +7118,24 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
 
             boolean hasMore = this.heap.hasNext();
 
-            if(hasMore == false)
+            if(hasMore == false) {
                 return false;
-            if(stopRow != null){
-                List<Cell> cells = this.heap.peek();
-                byte[] row = cells.get(0).getRow();
+            } else {
+                if (stopRow != null) {
+                    List<Cell> cells = this.heap.peek();
+                    if(!cells.isEmpty()) {
+                        byte[] row = cells.get(0).getRow();
 
-                if(Bytes.compareTo(row, stopRow) >= 0){
-                    close();
-                    return false;
+                        if (Bytes.compareTo(row, stopRow) >= 0) {
+                            close();
+                            return false;
+                        }
+                    }else {
+                        return false;
+                    }
+                } else {
+                    return true;
                 }
-            }else {
-                return true;
             }
             return hasMore;
         }

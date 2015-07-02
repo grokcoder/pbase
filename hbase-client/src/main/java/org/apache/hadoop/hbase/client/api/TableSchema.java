@@ -13,8 +13,8 @@ public class TableSchema {
     private String name;
 
     private static final String MESSAGE = "message";
-    private static final String ROW_KEY = "required binary rowKey;";
-    private static final String TIME_STAMP = "required int64 timestamp;";
+    private static final String ROW_KEY = "required binary rowkey ;";
+    private static final String TIME_STAMP = "required int64 timestamp ;";
 
     private static final String CF = "cf";
 
@@ -42,15 +42,15 @@ public class TableSchema {
      */
     public String getTableSchema(){
         StringBuilder sb = new StringBuilder();
-        sb.append(MESSAGE)
-                .append(name)
-                .append("{")
+        sb.append(MESSAGE).append(" ")
+                .append(name).append(" ")
+                .append("{").append(" ")
                 .append(ROW_KEY);
 
         for(ColumnDescriptor cd : columnDescripors){
             sb.append(cd.getSchemaColumnDesc());
         }
-        sb.append(TIME_STAMP).append("}");
+        sb.append(" ").append(TIME_STAMP).append(" }");
         return sb.toString();
     }
 
@@ -85,12 +85,22 @@ public class TableSchema {
          */
         public String getSchemaColumnDesc(){
             StringBuilder sb = new StringBuilder();
-            sb.append(field_rule).append(" ")
+            sb.append(" ").append(field_rule).append(" ")
                     .append(field_type).append(" ")
                     .append(COLUMN_FAMILY)
-                    .append(name).append(";");
+                    .append(name).append(" ; ");
             return sb.toString();
         }
+    }
+
+
+    public static void main(String []args){
+        TableSchema schema = new TableSchema("people");
+        schema.addColumnDescripor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescripor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescripor("job", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        //schema.addColumnDescripor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        System.out.print(schema.getTableSchema());
     }
 
 

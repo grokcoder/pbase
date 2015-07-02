@@ -23,15 +23,15 @@ public class TestPBaseClient {
     public static final TableName tableName = TableName.valueOf("people2");
 
     public static void main(String []args){
-        testPut();
-        //testScan();
+        //testPut();
+        testScan();
     }
 
 
     public static void testPut(){
 
         List<Put> puts = new LinkedList<>();
-        for(int i = 10001; i < 1000000; i++) {
+        for(int i = 1; i < 1000000; i++) {
             Put put = new Put(String.format("%07d", i).getBytes());
             put.addColumn("cf".getBytes(), "name".getBytes(), ("wangxiaoyi" + i).getBytes());
             put.addColumn("cf".getBytes(), "age".getBytes(), ("" + i).getBytes());
@@ -46,8 +46,8 @@ public class TestPBaseClient {
     public static void testScan(){
         Matcher matcher = new Matcher(tableName.getNameAsString(), null)
                 .setCachingRows(100)
-                .setStartRow(String.format("%07d", 89).getBytes());
-               // .setStopRow(String.format("%07d", 100).getBytes());
+                .setStartRow(String.format("%07d", 3).getBytes())
+                .setStopRow(String.format("%07d", 10).getBytes());
 
 
         try (Connection connection = ConnectionFactory.createConnection(conf)) {

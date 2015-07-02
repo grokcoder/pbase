@@ -6,13 +6,14 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
 /**
  * Created by wangxiaoyi on 15/6/8.
+ *
+ * store the scanner for sorted query
  */
 
 public class ScannerHeap {
@@ -81,7 +82,7 @@ public class ScannerHeap {
      */
     public List<Cell> peek() {
         if(curr == null)
-            return null;
+            return new LinkedList<>();
         else
             return curr.peek();
     }
@@ -145,6 +146,7 @@ public class ScannerHeap {
         }
     }
 
+    //todo: seek with rowkey
     public boolean seek(byte [] row){
         return false;
     }

@@ -33,7 +33,6 @@
     <packaging>jar</packaging>
 
     <properties>
-        <log4j.version>1.2.17</log4j.version>
         <parquet.version>1.6.0</parquet.version>
     </properties>
 
@@ -57,10 +56,11 @@
 
 
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-parent</artifactId>
+            <version>1.7.12</version>
         </dependency>
+
         <dependency>
             <groupId>com.twitter</groupId>
             <artifactId>parquet-jackson</artifactId>

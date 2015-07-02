@@ -1,4 +1,4 @@
-package main.parquet;
+package org.apache.hadoop.hbase.regionserver.pbase.util;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -8,6 +8,7 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.io.pfile.PFileReader;
 import org.apache.hadoop.hbase.regionserver.RecordScanner;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.junit.Test;
 import parquet.schema.MessageType;
 
 import java.io.IOException;
@@ -21,11 +22,7 @@ import java.util.List;
  */
 public class ParquetReadUtil {
 
-    //public static Path rootPath = new Path("hdfs://10.214.208.11:9000/parquet/");
-
-
-
-    public static Path rootPath = new Path("hdfs://localhost:9000/hbase/data/default/test7/0f8c8c42a9552e443b14030a35e1d902/");
+    public static Path rootPath = new Path("hdfs://localhost:9000/parquet");
 
 
     /**
@@ -60,10 +57,6 @@ public class ParquetReadUtil {
         for(Path file : paths){
             try {
                 PFileReader reader = new PFileReader(file, new Configuration(), schema);
-
-                System.out.println("Start Key : " + Bytes.toInt(reader.getStartKey()));
-                System.out.println("End KEY : " + Bytes.toInt(reader.getEndKey()));
-
                 RecordScanner scanner = reader.getScanner();
                 scanners.add(scanner);
             }catch (IOException ioe){
@@ -74,22 +67,28 @@ public class ParquetReadUtil {
         return scanners;
     }
 
-    public static void main(String []args){
-        List<Path> paths = loadParquetFiles(new Path(rootPath, "cf1"));
+
+    @Test
+    public void testReadWriteValue(){
+        List<Path> paths = loadParquetFiles(new Path(rootPath, "pfile"));
         List<RecordScanner> scanners = getParquetFileScanner(paths, null);
+
+        List<String> rowkeys = new LinkedList<>();
 
         for(RecordScanner scanner : scanners){
             while (scanner.hasNext()){
                 List<Cell> cells = scanner.next();
-                for(Cell cell : cells){
-                    System.out.println(Bytes.toInt(cell.getRow()) + " " + Bytes.toString(cell.getFamily())
-                            + " " + Bytes.toString(cell.getQualifier()) + " " + Bytes.toString(cell.getValue())
-                            + " " + cell.getTimestamp());
+                if(!cells.isEmpty()){
+                    rowkeys.add(Bytes.toString(cells.get(0).getRow()));
                 }
             }
         }
-    }
 
+        for(int i = 0; i < 500; ++i){
+            String row = String.format("%10d", i + 1);
+            org.junit.Assert.assertEquals("read row key is not equals to the wrote row key", row, rowkeys.get(i));
+        }
+    }
 
 
 }

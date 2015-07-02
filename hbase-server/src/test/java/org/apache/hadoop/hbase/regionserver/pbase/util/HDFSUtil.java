@@ -1,4 +1,4 @@
-package main.parquet;
+package org.apache.hadoop.hbase.regionserver.pbase.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,9 +37,6 @@ public class HDFSUtil {
         }
         return null;
     }
-
-
-
 
 
 

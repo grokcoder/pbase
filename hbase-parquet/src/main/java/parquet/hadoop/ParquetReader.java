@@ -154,7 +154,7 @@ public class ParquetReader<T> implements Closeable {
     public long getTotalCountLeft(){
         if(reader != null)
             return reader.getTotalCountLeft();
-        else return -1l;
+        else return 0l;
     }
 
 
