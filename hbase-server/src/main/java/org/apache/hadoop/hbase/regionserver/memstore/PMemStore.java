@@ -81,5 +81,8 @@ public  interface PMemStore extends HeapSize{
 
     byte[] getEndKey();
 
+    int getRecordCount();
+
+    long getCurrSnapshotId();
 
 }

@@ -38,6 +38,10 @@ public class PMemStoreSnapshot {
         return mutationCount;
     }
 
+    public boolean isEmpty(){
+        return scanner.hasNext();
+    }
+
     public long getSize() {
         return size;
     }

@@ -5,11 +5,9 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellScanner;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.regionserver.InternalRecordScanner;
-import org.apache.hadoop.hbase.regionserver.RecordScanner;
 import org.apache.hadoop.hbase.regionserver.RowScanner;
 import org.apache.hadoop.hbase.regionserver.UnexpectedStateException;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -64,7 +62,6 @@ public class PMemStoreImpl implements PMemStore{
         snapshotRowInMem = new ConcurrentSkipListMap<>(Bytes.BYTES_COMPARATOR);
         memstoreSize = new AtomicLong(DEEP_OVERHEAD);
         snapshotSize = 0;
-
     }
 
     /**
@@ -117,6 +114,13 @@ public class PMemStoreImpl implements PMemStore{
     public Mutation get(byte[] row) {
         Mutation m = rowInMem.get(row);
         return m;
+    }
+
+    /**
+     * @return num in memory
+     */
+    public int getRecordCount(){
+        return rowInMem.size();
     }
 
     /**
@@ -192,8 +196,12 @@ public class PMemStoreImpl implements PMemStore{
         if (!this.snapshotRowInMem.isEmpty()) {
             this.snapshotRowInMem = new ConcurrentSkipListMap<>(Bytes.BYTES_COMPARATOR);
         }
-        this.snapshotSize = 0;
-        this.snapshotId = -1;
+        this.snapshotSize = 0l;
+        this.snapshotId = -1l;
+    }
+
+    public long getCurrSnapshotId(){
+        return snapshotId;
     }
 
 
@@ -304,7 +312,8 @@ public class PMemStoreImpl implements PMemStore{
          * @param row
          */
         public void seek(byte[] row){
-            if(row == null) return;
+
+            if(row == null || rowInMem == null || rowInMem.size() == 0) return;
 
             Set<byte []> rows = rowInMem.keySet();
             it = rows.iterator();
@@ -330,6 +339,9 @@ public class PMemStoreImpl implements PMemStore{
          * init use
          */
         public void seek(){
+
+            if(rowInMem == null || rowInMem.size() == 0) return;
+
             Set<byte []> rows = rowInMem.keySet();
             it = rows.iterator();
             int count = 1;
@@ -350,7 +362,10 @@ public class PMemStoreImpl implements PMemStore{
          * @return
          */
         public boolean hasNext(){
-            return next == null ? false : true;
+            if(rowInMem == null || rowInMem.size() == 0){
+                curr = null;
+            }
+            return curr == null ? false : true;
         }
 
         /**
@@ -359,7 +374,7 @@ public class PMemStoreImpl implements PMemStore{
          */
 
         public Mutation nextRow(){
-            Mutation m = rowInMem.get(next);
+            Mutation m = rowInMem.get(curr);
             curr = next;
             next = it.hasNext() ? it.next() : null;
             countLeft --;
@@ -389,7 +404,7 @@ public class PMemStoreImpl implements PMemStore{
          */
         @Override
         public byte[] getStartKey() {//todo
-            return new byte[0];
+            return startkey;
         }
 
         /**
@@ -419,7 +434,7 @@ public class PMemStoreImpl implements PMemStore{
          */
         @Override
         public byte[] getEndKey() {
-            return new byte[0];//todo
+            return endkey;
         }
 
 
@@ -430,8 +445,9 @@ public class PMemStoreImpl implements PMemStore{
          */
         @Override
         public List<Cell> peek() {
-            if(next != null) {
-                Mutation m = rowInMem.get(next);
+            if(! hasNext()) return new LinkedList<>();
+            if(curr != null) {
+                Mutation m = rowInMem.get(curr);
                 List<Cell> cells = new LinkedList<>();
                 try {
                     if (m != null) {
@@ -445,9 +461,9 @@ public class PMemStoreImpl implements PMemStore{
                     LOG.error(ioe);
                 }
                 return cells;
+            }else {
+                return new LinkedList<>();
             }
-
-           return null;
         }
 
         /**
@@ -459,69 +475,9 @@ public class PMemStoreImpl implements PMemStore{
          */
         @Override
         public void close() throws IOException {
-
+            curr = null;
+            next = null;
         }
-    }
-
-
-    public static void main(String []args)throws IOException{
-
-
-        PMemStore memStore = new PMemStoreImpl(HBaseConfiguration.create());
-        final int ROWS_LEN = 10;
-
-        for(int i = 0 ; i < ROWS_LEN; ++i){
-            Put put = new Put(Bytes.toBytes(i));
-            put.addColumn(Bytes.toBytes("cf1"), Bytes.toBytes("c1"), Bytes.toBytes("value1"));
-            put.addColumn(Bytes.toBytes("cf1"), Bytes.toBytes("c2"), Bytes.toBytes("value2"));
-            try {
-                memStore.add(put);
-            }catch (IOException ioe){
-                ioe.printStackTrace();
-            }
-        }
-
-        PMemStoreSnapshot snapshot = memStore.snapshot();
-        System.out.println("snapshot id : " + snapshot.getId());
-        System.out.println("snapshot size : " + snapshot.getSize());
-        System.out.println("snapshot mutation size : " + snapshot.getMutationCount());
-        System.out.println("startkey : " + Bytes.toInt(snapshot.getStartKey()));
-        System.out.println("endkey : " + Bytes.toInt(snapshot.getEndKey()));
-
-
-
-        RowScanner rowScanner = snapshot.getScanner();
-        rowScanner.seek(Bytes.toBytes(10));
-
-        //rowScanner.seek(Bytes.toBytes(0));
-        while (rowScanner.hasNext()){
-
-            List<Cell> cells = rowScanner.next();
-            List<Cell> peek = rowScanner.peek();
-
-
-            System.out.print("curr" + Bytes.toInt(cells.get(0).getRow()));
-            System.out.println("\tpeek" + Bytes.toInt(peek.get(0).getRow()));
-
-
-
-/*            Mutation m = rowScanner.nextRow();
-            CellScanner scanner = m.cellScanner();
-            //System.out.println("rowkey columnfamily column value");
-
-            while (scanner.advance()){
-                Cell cell = scanner.current();
-                System.out.println(
-                        Bytes.toInt(m.getRow()) + "\t\t" +
-                                Bytes.toString(cell.getFamily()) + "\t\t" +
-                                Bytes.toString(cell.getQualifier()) + "\t\t" +
-                                Bytes.toString(cell.getValue()));
-            }*/
-        }
-
-
-
-
     }
 
 }

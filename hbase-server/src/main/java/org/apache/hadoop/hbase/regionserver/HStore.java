@@ -2696,9 +2696,16 @@ public class HStore implements Store {
     public List<RecordScanner> loadPFileScanner(byte[] startRow){
 
         List<PStoreFile> storeFiles = this.pStoreFiles;
+        List<PStoreFile> filterEdStoreFiles = new LinkedList<>();
+        for(PStoreFile file : storeFiles){
+            if(Bytes.compareTo(startRow, file.getStartKey().getBytes()) >= 0 && Bytes.compareTo(startRow, file.getEndKey().getBytes()) <= 0){
+                filterEdStoreFiles.add(file);
+            }
+        }
+
         List<RecordScanner> scanners = new LinkedList<>();
 
-        for(PStoreFile storeFile: storeFiles){
+        for(PStoreFile storeFile: filterEdStoreFiles){
             //todo: add read schema supported
             PFileReader reader =null;
             try {

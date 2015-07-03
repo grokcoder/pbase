@@ -30,8 +30,8 @@ public class TestPFileReaderAndScanner {
         int i = 0;
         for(int j = 0; j < 10; ++ j){
             PFileReader.PFileScanner scanner = (PFileReader.PFileScanner)scanners.get(j);
-            Assert.assertEquals("start key not equal ", Bytes.toString(scanner.getStartKey()), String.format("%10d", i + 1));
-            Assert.assertEquals("end key not equal ", Bytes.toString(scanner.getEndKey()), String.format("%10d", i + 50));
+            Assert.assertEquals("start key not equal ", String.format("%10d", i + 1), Bytes.toString(scanner.getStartKey()));
+            Assert.assertEquals("end key not equal ", String.format("%10d", i + 50), Bytes.toString(scanner.getEndKey()));
             i += 50;
         }
     }
@@ -87,8 +87,6 @@ public class TestPFileReaderAndScanner {
         }
 
     }
-
-
 
     @Test
     public void testGetRecordCount(){//scanner1

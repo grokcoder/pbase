@@ -2471,8 +2471,10 @@ public class RSRpcServices implements HBaseRPCErrorHandler,
                                     }
                                     // Collect values to be returned here
                                     //boolean moreRows = scanner.nextRaw(values);
-                                    values = scanner.nextRaw();
+
                                     boolean moreRows = scanner.hasNext();
+                                    if(! moreRows) break;
+                                    values = scanner.nextRaw();
 
                                     if (values != null && !values.isEmpty()) {
                                         for (Cell cell : values) {
@@ -2481,9 +2483,6 @@ public class RSRpcServices implements HBaseRPCErrorHandler,
                                         }
                                         results.add(Result.create(values, null, stale));
                                         i++;
-                                    }
-                                    if (!moreRows) {
-                                        break;
                                     }
                                     values.clear();
                                 }//end while(i< rows)
