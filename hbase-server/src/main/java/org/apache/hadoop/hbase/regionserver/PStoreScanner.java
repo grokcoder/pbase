@@ -26,19 +26,12 @@ public class PStoreScanner implements RecordScanner{
 
     protected final Scan scan;
 
-    // if heap == null and lastTop != null, you need to reseek given the key below
-    protected List<Cell> lastTop = null;
-
-
     // A flag whether use pread for scan
     private boolean scanUsePread = false;
+
     protected ReentrantLock lock = new ReentrantLock();
 
     private final long readPt;
-    protected boolean closing = false;
-
-    protected volatile boolean hasNext = true;
-
 
 
 
@@ -49,7 +42,7 @@ public class PStoreScanner implements RecordScanner{
         try {
             this.heap = new ScannerHeap(scanners);
         }catch (IOException ioe){
-
+            LOG.error(ioe.getMessage());
         }
     }
 
@@ -61,11 +54,11 @@ public class PStoreScanner implements RecordScanner{
      */
 
     public List<Cell> peek() {
-        List<Cell> cells = null;
+        List<Cell> cells = new LinkedList<>();
 
         lock.lock();
         try{
-            if(this.heap == null) cells = this.lastTop;
+            if(this.heap == null) return cells;
             else cells =  this.heap.peek();
         }finally {
             lock.unlock();
@@ -79,7 +72,29 @@ public class PStoreScanner implements RecordScanner{
      */
 
     public boolean hasNext() {
-        return  this.hasNext;
+
+        if(this.heap == null || ! this.heap.hasNext()){
+            close();
+            return false;
+        }
+        lock.lock();
+        try {
+
+            if(! Bytes.equals(scan.getStopRow(), HConstants.EMPTY_END_ROW)) {
+                List<Cell> peek = this.heap.peek();
+                byte[] peekRow = peek.get(0).getRow();
+                if(Bytes.compareTo(peekRow, scan.getStopRow()) >= 0){
+                    this.close();
+                    return false;
+                }
+            }else {
+                return this.heap.hasNext();
+            }
+
+        }finally {
+            lock.unlock();
+        }
+        return  true;
     }
 
 
@@ -98,30 +113,7 @@ public class PStoreScanner implements RecordScanner{
             if (checkReseek()) {
                 return result;
             }
-
-            // if the heap was left null, then the scanners had previously run out anyways, close and
-            // return.
-            if (this.heap == null) {
-                close();
-                return result;
-            }
-
             result = heap.next();
-            byte [] row = result.get(0).getRow();
-
-            if(scan.getStopRow() == null ||  Bytes.equals(scan.getStopRow(), HConstants.EMPTY_BYTE_ARRAY)){
-                this.hasNext = heap.hasNext();
-                if(hasNext == false){
-                    this.close();
-                }
-            }else {
-                if(Bytes.compareTo(row, scan.getStopRow()) >= 0){
-                    this.hasNext = false;
-                    this.close();
-                    return null;
-                }
-            }
-
         }finally {
             lock.unlock();
         }
@@ -138,8 +130,6 @@ public class PStoreScanner implements RecordScanner{
 
         lock.lock();
         try {
-            if (this.closing) return;
-            this.closing = true;
             // under test, we dont have a this.store
             if (this.store != null)
                 //todo : this.store.deleteChangedReaderObserver(this);
@@ -149,7 +139,7 @@ public class PStoreScanner implements RecordScanner{
             }catch (IOException ioe){
                 LOG.error(ioe.getMessage());
             }
-            this.heap = null; // CLOSED!
+            this.heap = null;
             //this.lastTop = null; // If both are null, we are closed.
         }finally {
             lock.unlock();
@@ -157,7 +147,7 @@ public class PStoreScanner implements RecordScanner{
     }
 
     /**
-     * seek the record by rowkey
+     * TODO: seek the record by rowkey
      *
      * @param rowkey
      */

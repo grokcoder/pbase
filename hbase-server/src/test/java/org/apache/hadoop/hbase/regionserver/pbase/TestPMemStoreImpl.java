@@ -24,7 +24,7 @@ public class TestPMemStoreImpl {
 
     public static final Log LOG = LogFactory.getLog(TestPMemStoreImpl.class);
 
-    public static PMemStore memStore = new PMemStoreImpl(HBaseConfiguration.create());
+    public static PMemStore memStore = new PMemStoreImpl(null);
 
     /**
      * init the Pmemstore

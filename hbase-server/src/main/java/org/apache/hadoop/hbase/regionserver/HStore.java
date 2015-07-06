@@ -2697,8 +2697,12 @@ public class HStore implements Store {
 
         List<PStoreFile> storeFiles = this.pStoreFiles;
         List<PStoreFile> filterEdStoreFiles = new LinkedList<>();
+
         for(PStoreFile file : storeFiles){
-            if(Bytes.compareTo(startRow, file.getStartKey().getBytes()) >= 0 && Bytes.compareTo(startRow, file.getEndKey().getBytes()) <= 0){
+            if(Bytes.compareTo(startRow, HConstants.EMPTY_START_ROW) != 0){
+                if(Bytes.compareTo(startRow, file.getEndKey().getBytes()) <= 0)
+                filterEdStoreFiles.add(file);
+            }else {
                 filterEdStoreFiles.add(file);
             }
         }
@@ -2707,7 +2711,7 @@ public class HStore implements Store {
 
         for(PStoreFile storeFile: filterEdStoreFiles){
             //todo: add read schema supported
-            PFileReader reader =null;
+            PFileReader reader = null;
             try {
                 reader = new PFileReader(storeFile.getPath(), this.conf, null);
             }catch (IOException ioe){
@@ -2715,12 +2719,11 @@ public class HStore implements Store {
                 continue;
             }
             InternalRecordScanner scanner = reader.getScanner();
-            if(Bytes.compareTo(startRow, scanner.getEndKey()) <= 0){
-                scanner.seek(startRow);
-                if(scanner.hasNext()){
-                    scanners.add(scanner);
-                }
+            scanner.seek(startRow);
+            if(scanner.hasNext()){
+                scanners.add(scanner);
             }
+
         }
         return scanners;
     }

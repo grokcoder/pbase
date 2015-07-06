@@ -45,9 +45,9 @@ public class TestPBaseClient {
 
     public static void testScan(){
         Matcher matcher = new Matcher(tableName.getNameAsString(), null)
-                .setCachingRows(100);
-                //.setStartRow(String.format("%07d", 103).getBytes());
-                //.setStopRow(String.format("%07d", 145).getBytes());
+                .setCachingRows(100)
+                .setStartRow(String.format("%07d", 999998).getBytes());
+               //.setStopRow(String.format("%07d", 11).getBytes());
 
 
         try (Connection connection = ConnectionFactory.createConnection(conf)) {

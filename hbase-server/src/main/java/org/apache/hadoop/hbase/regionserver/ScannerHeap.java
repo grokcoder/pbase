@@ -51,9 +51,9 @@ public class ScannerHeap {
         if( !scanners.isEmpty()){
             this.heap = new PriorityQueue<>(scanners.size(), comparator);
             for(RecordScanner scanner : scanners){
-                if(scanner.peek() != null){
+                if(!scanner.peek().isEmpty()){
                     heap.add(scanner);
-                }else {
+                } else {
                     scanner.close();
                 }
             }
@@ -66,7 +66,7 @@ public class ScannerHeap {
         if (curr != null)
             return curr;
         else {
-            if(heap != null)
+            if(heap != null && !heap.isEmpty())
                 return heap.poll();
             else
                 return null;

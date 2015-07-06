@@ -7057,7 +7057,10 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
          */
         @Override
         public List<Cell> peek() {
-            return heap.peek();
+            if(heap != null)
+                return heap.peek();
+            else
+                return new LinkedList<>();
         }
 
         /**
@@ -7069,11 +7072,12 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
         @Override
         public boolean isStopRow(byte[] row) {
             List<Cell> top = this.heap.peek();
-            if(top == null) return true;
+            if(top.isEmpty()) return true;
             else {
+                if(row == null) return true;
                 if(stopRow == null) return false;
                 byte [] topRow = top.get(0).getRow();
-                return Bytes.compareTo(row, topRow) == 0;
+                return Bytes.compareTo(row, topRow) >= 0;
             }
         }
 
@@ -7115,11 +7119,11 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
          */
         @Override
         public boolean hasNext() {
-
+            if(this.heap == null )return false;
             boolean hasMore = this.heap.hasNext();
 
             if(hasMore == false) {
-                return false;
+                return hasMore;
             } else {
                 if (stopRow != null) {
                     List<Cell> cells = this.heap.peek();
@@ -7134,7 +7138,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
                         return false;
                     }
                 } else {
-                    return true;
+                    return hasMore;
                 }
             }
             return hasMore;

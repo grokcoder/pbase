@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellScanner;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.regionserver.InternalRecordScanner;
@@ -313,7 +314,11 @@ public class PMemStoreImpl implements PMemStore{
          */
         public void seek(byte[] row){
 
-            if(row == null || rowInMem == null || rowInMem.size() == 0) return;
+            if(Bytes.compareTo(row, HConstants.EMPTY_START_ROW) == 0
+                    || row == null
+                    || rowInMem == null
+                    || rowInMem.size() == 0)
+                return;
 
             Set<byte []> rows = rowInMem.keySet();
             it = rows.iterator();
@@ -445,7 +450,6 @@ public class PMemStoreImpl implements PMemStore{
          */
         @Override
         public List<Cell> peek() {
-            if(! hasNext()) return new LinkedList<>();
             if(curr != null) {
                 Mutation m = rowInMem.get(curr);
                 List<Cell> cells = new LinkedList<>();

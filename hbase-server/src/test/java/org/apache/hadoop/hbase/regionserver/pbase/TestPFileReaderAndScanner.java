@@ -2,6 +2,7 @@ package org.apache.hadoop.hbase.regionserver.pbase;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.io.pfile.PFileReader;
 import org.apache.hadoop.hbase.regionserver.RecordScanner;
 import org.apache.hadoop.hbase.regionserver.pbase.util.ParquetReadUtil;
@@ -52,7 +53,7 @@ public class TestPFileReaderAndScanner {
         }
 
         //bigger than startkey
-        scanner.seek(String.format("%10d", 0).getBytes());
+        scanner.seek(HConstants.EMPTY_START_ROW);
         List<Cell> result = scanner.peek();
         Assert.assertEquals("seek error! ", false, result.isEmpty());
         if(!result.isEmpty()){
