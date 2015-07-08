@@ -36,10 +36,10 @@
     <relativePath/>
     <!-- no parent resolution -->
   </parent>
-  <groupId>org.apache.pbase</groupId>
-  <artifactId>pbase</artifactId>
+  <groupId>org.apache.hbase</groupId>
+  <artifactId>hbase</artifactId>
   <packaging>pom</packaging>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>PBase</name>
   <description>
     PBase = HBase with Parquet
