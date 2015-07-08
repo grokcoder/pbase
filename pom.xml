@@ -54,7 +54,6 @@
     <module>hbase-common</module>
     <module>hbase-examples</module>
     <module>hbase-prefix-tree</module>
-    <module>hbase-testing-util</module>
     <module>hbase-annotations</module>
     <module>hbase-parquet</module>
   </modules>

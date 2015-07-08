@@ -54,13 +54,6 @@
             <version>2.6.0</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-parent</artifactId>
-            <version>1.7.12</version>
-        </dependency>
-
         <dependency>
             <groupId>com.twitter</groupId>
             <artifactId>parquet-jackson</artifactId>

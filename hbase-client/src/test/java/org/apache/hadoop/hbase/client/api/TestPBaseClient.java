@@ -48,6 +48,7 @@ public class TestPBaseClient {
                 .setCachingRows(100)
                 .setStartRow(String.format("%07d", 999998).getBytes());
                //.setStopRow(String.format("%07d", 11).getBytes());
+        
 
 
         try (Connection connection = ConnectionFactory.createConnection(conf)) {
