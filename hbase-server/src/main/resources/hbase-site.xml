@@ -120,6 +120,11 @@
     </property>
 
     <property>
+        <name>aaa</name>
+        <value>bb</value>
+    </property>
+
+    <property>
         <name>hbase.defaults.for.version.skip</name>
         <value>true</value>
     </property>

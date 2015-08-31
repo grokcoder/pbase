@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 #/**
 # * Copyright 2007 The Apache Software Foundation

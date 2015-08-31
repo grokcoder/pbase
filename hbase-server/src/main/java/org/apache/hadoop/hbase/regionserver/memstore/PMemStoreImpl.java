@@ -8,9 +8,7 @@ import org.apache.hadoop.hbase.CellScanner;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.regionserver.InternalRecordScanner;
-import org.apache.hadoop.hbase.regionserver.RowScanner;
-import org.apache.hadoop.hbase.regionserver.UnexpectedStateException;
+import org.apache.hadoop.hbase.regionserver.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.ClassSize;
 import org.apache.hadoop.hbase.util.EnvironmentEdgeManager;
@@ -267,8 +265,41 @@ public class PMemStoreImpl implements PMemStore{
         return new PMemStoreScanner(this.rowInMem);
     }
 
+    public RecordScanner getSnapshotScanner(){
+        return new PMemStoreScanner(snapshotRowInMem);
+    }
+
     public RowScanner getScanner(Map<byte[], Mutation> rowInMem) {
         return new PMemStoreScanner(rowInMem);
+    }
+
+    /**
+     * return the scanner heap
+     * of current kv scanner and snapshot scanner
+     * @param startkey
+     * @return
+     */
+    public ScannerHeap getRecordScanner(byte[] startkey){
+
+        List<RecordScanner> scanners = new LinkedList<>();
+        if( ! snapshotRowInMem.isEmpty() ) {
+            PMemStoreScanner snapshotScanner = new PMemStoreScanner(snapshotRowInMem);
+            snapshotScanner.seek(startkey);
+            scanners.add(snapshotScanner);
+        }
+        if( ! rowInMem.isEmpty() ){
+            PMemStoreScanner memStoreScanner = new PMemStoreScanner(rowInMem);
+            memStoreScanner.seek(startkey);
+            scanners.add(memStoreScanner);
+        }
+        ScannerHeap heap = null;
+        try {
+            heap = new ScannerHeap(scanners, new RecordScannerComparator());
+        }catch (IOException ioe){
+            LOG.error("create record scanner error : " + ioe);
+        }finally {
+            return heap;
+        }
     }
 
 
@@ -297,10 +328,6 @@ public class PMemStoreImpl implements PMemStore{
         private int countLeft = 0;
 
         private Map<byte[], Mutation> rowInMem;
-        //private volatile Map<byte[], Mutation> snapshotRowInMem;
-
-        private Mutation currRow;
-
 
         public PMemStoreScanner(Map<byte[], Mutation> rowInMem){
             this.rowInMem = rowInMem;

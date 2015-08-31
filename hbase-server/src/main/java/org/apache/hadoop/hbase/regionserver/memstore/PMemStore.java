@@ -3,6 +3,7 @@ package org.apache.hadoop.hbase.regionserver.memstore;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.io.HeapSize;
 import org.apache.hadoop.hbase.regionserver.MemStoreSnapshot;
+import org.apache.hadoop.hbase.regionserver.RecordScanner;
 import org.apache.hadoop.hbase.regionserver.RowScanner;
 import org.apache.hadoop.hbase.regionserver.UnexpectedStateException;
 
@@ -37,6 +38,12 @@ public  interface PMemStore extends HeapSize{
      * @return {@link RowScanner}
      */
     RowScanner getScanner(Map<byte[], Mutation> mutations);
+
+    /**
+     * create scanner for {@link PMemStore} snapshot
+     * @return {@link RecordScanner}
+     */
+    RecordScanner getSnapshotScanner();
 
     /**
      * Clears the current snapshot of the Memstore.

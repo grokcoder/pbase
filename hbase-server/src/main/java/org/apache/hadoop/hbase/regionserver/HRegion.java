@@ -2592,9 +2592,6 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
     @SuppressWarnings("unchecked")
     private long doMiniBatchMutation(BatchOperationInProgress<?> batchOp) throws IOException {
 
-        /**
-         * @author wangxiaoyi  PUT和delete发生的真实位置
-         */
 
         boolean isInReplay = batchOp.isInReplay();
         // variable to note if all Put items are for the same CF -- metrics related
@@ -2805,7 +2802,7 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
             long addedSize = 0;
 
 
-            //TODO: support mutiple cfs
+            //TODO: support the mvcc
             //add to pmemstore
             Store store = null;
             for(Mutation m : mutationsToParquet){
@@ -2822,7 +2819,6 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
             //add to wal
             for (Mutation m : mutationsToParquet){
                 Map<byte[], List<Cell>> map = m.getFamilyCellMap();
-
                 for(Map.Entry<byte[], List<Cell>> en : map.entrySet()){
                     memstoreCells.addAll(en.getValue());
                 }
@@ -5683,6 +5679,8 @@ public class HRegion implements HeapSize, PropagatingConfigurationObserver { // 
             rowLock = getRowLock(row);
             try {
                 lock(this.updatesLock.readLock());
+
+
                 try {
                     // wait for all prior MVCC transactions to finish - while we hold the row lock
                     // (so that we are guaranteed to see the latest state)

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 #/**
 # * Copyright 2007 The Apache Software Foundation
@@ -135,3 +136,6 @@ export HBASE_OPTS="-XX:+UseConcMarkSweepGC"
 # HBASE_ROOT_LOGGER=INFO,DRFA
 # The reason for changing default to RFA is to avoid the boundary case of filling out disk space as 
 # DRFA doesn't put any cap on the log size. Please refer to HBase-5655 for more context.
+export HBASE_MANAGES_ZK=false
+
+export JAVA_HOME=${JAVA_HOME}

@@ -63,8 +63,8 @@ public abstract class Mutation extends OperationWithAttributes implements Row, C
             ClassSize.OBJECT +
                     // row + OperationWithAttributes.attributes
                     2 * ClassSize.REFERENCE +
-                    // Timestamp
-                    1 * Bytes.SIZEOF_LONG +
+                    // Timestamp + SeqId
+                    2 * Bytes.SIZEOF_LONG +
                     // durability
                     ClassSize.REFERENCE +
                     // familyMap
@@ -90,6 +90,19 @@ public abstract class Mutation extends OperationWithAttributes implements Row, C
     // A Map sorted by column family.
     protected NavigableMap<byte[], List<Cell>> familyMap =
             new TreeMap<byte[], List<Cell>>(Bytes.BYTES_COMPARATOR);
+
+
+    //for mvcc
+    private long seqId = 0;
+
+
+    public long getSeqId() {
+        return seqId;
+    }
+
+    public void setSeqId(long seqId) {
+        this.seqId = seqId;
+    }
 
     @Override
     public CellScanner cellScanner() {
