@@ -33,8 +33,6 @@ import java.util.List;
 public class TestParquetRead {
 
 
-
-
     public static void main(String[] args) throws IOException {
 
 

@@ -48,8 +48,6 @@ public class TestPBaseClient {
                 .setCachingRows(100)
                 .setStartRow(String.format("%07d", 999998).getBytes());
                //.setStopRow(String.format("%07d", 11).getBytes());
-        
-
 
         try (Connection connection = ConnectionFactory.createConnection(conf)) {
             try (Table table = connection.getTable(matcher.getTableName())) {
@@ -63,7 +61,6 @@ public class TestPBaseClient {
                         System.out.print(Bytes.toString(cell.getRow()) + "\t");
                         System.out.print(Bytes.toString(cell.getQualifier()) + "\t");
                         System.out.print(Bytes.toString(cell.getValue()) + "\t");
-
                     }
                     System.out.println();
                 }
