@@ -2378,6 +2378,8 @@ public class RSRpcServices implements HBaseRPCErrorHandler,
                 ClientProtos.Scan protoScan = request.getScan();
                 boolean isLoadingCfsOnDemandSet = protoScan.hasLoadColumnFamiliesOnDemand();
                 Scan scan = ProtobufUtil.toScan(protoScan);
+                /*String schema = new String(scan.getAttribute(HConstants.SCAN_TABLE_SCHEMA));
+                System.out.println(schema);*/
                 // if the request doesn't set this, get the default region setting.
 
                 if (!isLoadingCfsOnDemandSet) {
@@ -2392,7 +2394,7 @@ public class RSRpcServices implements HBaseRPCErrorHandler,
                 }
                 if (scanner == null) {
                     scanner = region.getPScanner(scan);
-                    //TODO: 第一次调用的时候需要获取scan所涉及的scan
+                    //TODO: 第一次调用的时候需要获取scan所涉及的scanner
                 }
                 if (region.getCoprocessorHost() != null) {
                     //scanner = region.getCoprocessorHost().postScannerOpen(scan, scanner);

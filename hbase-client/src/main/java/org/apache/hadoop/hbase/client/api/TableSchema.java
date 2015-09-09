@@ -31,7 +31,7 @@ public class TableSchema {
      * @param field_rule
      * @param field_type
      */
-    public void addColumnDescripor(String columnName, FIELD_RULE field_rule, FIELD_TYPE field_type){
+    public void addColumnDescriptor(String columnName, FIELD_RULE field_rule, FIELD_TYPE field_type){
         ColumnDescriptor cd = new ColumnDescriptor(columnName, field_rule, field_type);
         columnDescripors.add(cd);
     }
@@ -96,9 +96,9 @@ public class TableSchema {
 
     public static void main(String []args){
         TableSchema schema = new TableSchema("people");
-        schema.addColumnDescripor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
-        schema.addColumnDescripor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
-        schema.addColumnDescripor("job", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("job", FIELD_RULE.repeated, FIELD_TYPE.binary);
         //schema.addColumnDescripor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
         System.out.print(schema.getTableSchema());
     }

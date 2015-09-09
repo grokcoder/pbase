@@ -2760,7 +2760,7 @@ public class HStore implements Store {
             }
 
 
-
+            //todo: add read schema
             scanners.addAll(loadPFileScanner(startRow));
             scanner = new PStoreScanner(this, scan, readPt, scanners);
 

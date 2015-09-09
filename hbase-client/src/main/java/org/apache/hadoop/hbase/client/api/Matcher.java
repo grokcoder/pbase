@@ -3,6 +3,7 @@ package org.apache.hadoop.hbase.client.api;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.Filter;
 
 
 /**
@@ -54,6 +55,10 @@ public class Matcher {
 
     public TableName getTableName(){
         return tableName;
+    }
+
+    public void setScanTableSchema(TableSchema schema){
+        scan.setAttribute(HConstants.SCAN_TABLE_SCHEMA, schema.getTableSchema().getBytes());
     }
 
 }

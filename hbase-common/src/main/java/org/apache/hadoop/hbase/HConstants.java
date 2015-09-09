@@ -399,7 +399,11 @@ public final class HConstants {
   /** The table schema qualifier */
   public static final byte [] SCHEMA_QUALIFIER = Bytes.toBytes("schema");
 
+  /** schema for table in pbase */
   public static final String SCHEMA = "schema";
+
+  /** schema for scanner to scan the data in parquet */
+  public static final String SCAN_TABLE_SCHEMA = "scan_table_schema";
 
   /** The RegionInfo qualifier as a string */
   public static final String REGIONINFO_QUALIFIER_STR = "regioninfo";

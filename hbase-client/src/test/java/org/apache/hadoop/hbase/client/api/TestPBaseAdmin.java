@@ -12,9 +12,9 @@ public class TestPBaseAdmin {
 
     public static void main(String []args) {
         TableSchema schema = new TableSchema("people2");
-        schema.addColumnDescripor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
-        schema.addColumnDescripor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
-        schema.addColumnDescripor("job", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("job", FIELD_RULE.repeated, FIELD_TYPE.binary);
 
         Configuration conf = HBaseConfiguration.create();
         PBaseAdmin admin = new PBaseAdmin(conf);
