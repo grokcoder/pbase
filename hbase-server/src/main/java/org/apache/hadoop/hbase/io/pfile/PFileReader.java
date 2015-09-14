@@ -60,17 +60,22 @@ public class PFileReader implements PFile.Reader{
 
 
     /**
-     * TODO: Check whether the params are valid
      * @param fileToRead
      * @param conf
      * @param schema
      */
     public PFileReader(Path fileToRead, Configuration conf, MessageType schema)throws IOException{
+
         this.path = fileToRead;
         this.conf = conf;
         this.schema = schema;
-        if(schema != null)
-            conf.set(ReadSupport.PARQUET_READ_SCHEMA, schema.toString());
+        if(schema != null) {
+            Configuration localConf = new Configuration(conf);
+            this.conf = localConf;
+//            encapsulate changes in the local config
+            //System.out.println(schema.toString());
+            this.conf.set(ReadSupport.PARQUET_READ_SCHEMA, this.schema.toString());
+        }
         initReader();
     }
 

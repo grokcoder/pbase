@@ -53,10 +53,12 @@ public class TestParquetRead {
 
 
         try {
+
             ParquetReader<Group> reader = ParquetReader.
                     builder(new GroupReadSupport(), file)
                     .withConf(configuration)
                     .build();
+
 
             ParquetFileInfo fileInfo = reader.getFileInfo();
 

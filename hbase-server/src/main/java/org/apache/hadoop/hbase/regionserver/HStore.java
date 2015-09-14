@@ -55,6 +55,7 @@ import org.apache.hadoop.hbase.io.hfile.HFileDataBlockEncoderImpl;
 import org.apache.hadoop.hbase.io.hfile.HFileScanner;
 import org.apache.hadoop.hbase.io.hfile.InvalidHFileException;
 import org.apache.hadoop.hbase.io.pfile.PFileReader;
+import org.apache.hadoop.hbase.migration.NamespaceUpgrade;
 import org.apache.hadoop.hbase.monitoring.MonitoredTask;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.generated.WALProtos.CompactionDescriptor;
@@ -2691,29 +2692,30 @@ public class HStore implements Store {
     /**
      * load parquet file scanner
      * @param startRow
+     * @param schema define which column to read from the disk parquet file
      * @return
      */
-    public List<RecordScanner> loadPFileScanner(byte[] startRow){
+    public List<RecordScanner> loadPFileScanner(byte[] startRow, MessageType schema){
 
         List<PStoreFile> storeFiles = this.pStoreFiles;
-        List<PStoreFile> filterEdStoreFiles = new LinkedList<>();
+        List<PStoreFile> filteredStoreFiles = new LinkedList<>();
 
         for(PStoreFile file : storeFiles){
             if(Bytes.compareTo(startRow, HConstants.EMPTY_START_ROW) != 0){
                 if(Bytes.compareTo(startRow, file.getEndKey().getBytes()) <= 0)
-                filterEdStoreFiles.add(file);
+                filteredStoreFiles.add(file);
             }else {
-                filterEdStoreFiles.add(file);
+                filteredStoreFiles.add(file);
             }
         }
 
         List<RecordScanner> scanners = new LinkedList<>();
 
-        for(PStoreFile storeFile: filterEdStoreFiles){
-            //todo: add read schema supported
-            PFileReader reader = null;
+
+        for(PStoreFile storeFile: filteredStoreFiles){
+            PFileReader reader;
             try {
-                reader = new PFileReader(storeFile.getPath(), this.conf, null);
+                reader = new PFileReader(storeFile.getPath(), this.conf, schema);
             }catch (IOException ioe){
                 LOG.error(ioe.getMessage());
                 continue;
@@ -2759,9 +2761,17 @@ public class HStore implements Store {
                 scanners.add(snapshotScanner);
             }
 
+            MessageType readSchema = null;
 
-            //todo: add read schema
-            scanners.addAll(loadPFileScanner(startRow));
+            String sSchema = new String(scan.getAttribute(HConstants.SCAN_TABLE_SCHEMA));
+            System.out.println(sSchema);
+            //TODO: verify the schema
+            if(sSchema != null) {
+                readSchema = MessageTypeParser.parseMessageType(sSchema);
+            }
+
+
+            scanners.addAll(loadPFileScanner(startRow, readSchema));
             scanner = new PStoreScanner(this, scan, readPt, scanners);
 
         }finally {

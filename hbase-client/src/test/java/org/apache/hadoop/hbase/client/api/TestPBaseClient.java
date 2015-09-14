@@ -4,6 +4,7 @@ package org.apache.hadoop.hbase.client.api;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -78,13 +79,14 @@ public class TestPBaseClient {
     public void testScanWithScanSchema(){
         Matcher matcher = new Matcher(tableName.getNameAsString(), null)
                 .setCachingRows(100)
-                .setStartRow(String.format("%07d", 999998).getBytes());
+                .setStartRow(String.format("%07d", 1).getBytes());
 
         TableSchema schema = new TableSchema(tableName.getNameAsString());
-        schema.addColumnDescriptor("c1", FIELD_RULE.required, FIELD_TYPE.int32);
-        schema.addColumnDescriptor("c2", FIELD_RULE.required, FIELD_TYPE.int64);
+        //schema.addColumnDescriptor("name", FIELD_RULE.repeated, FIELD_TYPE.binary);
+        schema.addColumnDescriptor("age", FIELD_RULE.repeated, FIELD_TYPE.binary);
 
         matcher.setScanTableSchema(schema);
+        System.out.println(new String(matcher.getScan().getAttribute(HConstants.SCAN_TABLE_SCHEMA)));
 
 
         try (Connection connection = ConnectionFactory.createConnection(conf)) {
