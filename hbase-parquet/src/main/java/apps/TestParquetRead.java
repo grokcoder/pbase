@@ -77,7 +77,6 @@ public class TestParquetRead {
                 }
 
 
-
                 rowCount++;
                 String name = new String(group.getBinary("name", 0).getBytes(), "UTF-8");
                 int age = group.getInteger("age", 0);

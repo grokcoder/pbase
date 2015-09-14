@@ -30,6 +30,8 @@ import java.util.Set;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import parquet.Log;
 import parquet.column.ColumnDescriptor;
 import parquet.column.page.PageReadStore;
@@ -54,7 +56,14 @@ import static parquet.Preconditions.checkNotNull;
 import static parquet.hadoop.ParquetInputFormat.STRICT_TYPE_CHECKING;
 
 class InternalParquetRecordReader<T> {
-    private static final Log LOG = Log.getLog(InternalParquetRecordReader.class);
+    //private static final Log LOG = Log.getLog(InternalParquetRecordReader.class);
+    /**
+     * @author wangxiaoyi
+     * change the Log to Logger in SL4J for better control the log info
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(InternalParquetRecordReader.class);
+
+    private static final boolean PRINT_LOG_INFO = false;
 
     private final ColumnIOFactory columnIOFactory = new ColumnIOFactory();
     private final Filter filter;
@@ -112,7 +121,7 @@ class InternalParquetRecordReader<T> {
         if (current == totalCountLoadedSoFar) {
             if (current != 0) {
                 totalTimeSpentProcessingRecords += (System.currentTimeMillis() - startedAssemblingCurrentBlockAt);
-                if (Log.INFO) {
+                if (PRINT_LOG_INFO) {
                     LOG.info("Assembled and processed " + totalCountLoadedSoFar + " records from " + columnCount + " columns in " + totalTimeSpentProcessingRecords + " ms: " + ((float) totalCountLoadedSoFar / totalTimeSpentProcessingRecords) + " rec/ms, " + ((float) totalCountLoadedSoFar * columnCount / totalTimeSpentProcessingRecords) + " cell/ms");
                     final long totalTime = totalTimeSpentProcessingRecords + totalTimeSpentReadingBytes;
                     if (totalTime != 0) {
@@ -122,8 +131,8 @@ class InternalParquetRecordReader<T> {
                     }
                 }
             }
-
-            LOG.info("at row " + current + ". reading next block");
+            if(PRINT_LOG_INFO)
+                LOG.info("at row " + current + ". reading next block");
             long t0 = System.currentTimeMillis();
             PageReadStore pages = reader.readNextRowGroup();
             if (pages == null) {
@@ -132,7 +141,7 @@ class InternalParquetRecordReader<T> {
             long timeSpentReading = System.currentTimeMillis() - t0;
             totalTimeSpentReadingBytes += timeSpentReading;
             BenchmarkCounter.incrementTime(timeSpentReading);
-            if (Log.INFO)
+            if (PRINT_LOG_INFO)
                 LOG.info("block read in memory in " + timeSpentReading + " ms. row count = " + pages.getRowCount());
             if (Log.DEBUG) LOG.debug("initializing Record assembly with requested schema " + requestedSchema);
             MessageColumnIO columnIO = columnIOFactory.getColumnIO(requestedSchema, fileSchema, strictTypeChecking);

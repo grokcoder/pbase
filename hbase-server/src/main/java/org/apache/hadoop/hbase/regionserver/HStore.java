@@ -2762,9 +2762,8 @@ public class HStore implements Store {
             }
 
             MessageType readSchema = null;
-
             String sSchema = new String(scan.getAttribute(HConstants.SCAN_TABLE_SCHEMA));
-            System.out.println(sSchema);
+
             //TODO: verify the schema
             if(sSchema != null) {
                 readSchema = MessageTypeParser.parseMessageType(sSchema);

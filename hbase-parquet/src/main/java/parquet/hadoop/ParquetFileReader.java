@@ -53,6 +53,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import parquet.Log;
 import parquet.bytes.BytesInput;
 import parquet.column.ColumnDescriptor;
@@ -85,7 +87,13 @@ import parquet.io.ParquetDecodingException;
  */
 public class ParquetFileReader implements Closeable {
 
-    private static final Log LOG = Log.getLog(ParquetFileReader.class);
+    /**
+     * @author wangxiaoyi
+     * change the Log to Logger in SL4J for better control the log info
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(ParquetFileReader.class);
+
+    //private static final Log LOG = Log.getLog(ParquetFileReader.class);
 
     public static String PARQUET_READ_PARALLELISM = "parquet.metadata.read.parallelism";
 
