@@ -53,7 +53,7 @@ public class TestPStoreScanner {
                 ioe.printStackTrace();
             }
         }
-        scanner = memStore.getScanner();
+        scanner = memStore.getScanner(null);
         return scanner;
     }
 

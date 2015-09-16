@@ -255,12 +255,6 @@ class InternalParquetRecordReader<T> {
         return Collections.unmodifiableMap(setMultiMap);
     }
 
-
-    /**
-     * @author wangxiaoyi
-     *
-     */
-
     /**
      * @return total count of records
      */

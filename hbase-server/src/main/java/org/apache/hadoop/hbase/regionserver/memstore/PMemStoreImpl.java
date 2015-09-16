@@ -5,13 +5,21 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellScanner;
+import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.regionserver.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.ClassSize;
 import org.apache.hadoop.hbase.util.EnvironmentEdgeManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import parquet.column.ColumnDescriptor;
+import parquet.schema.MessageType;
+import parquet.schema.MessageTypeParser;
+import parquet.schema.Type;
 
 import java.io.IOException;
 import java.util.*;
@@ -167,7 +175,7 @@ public class PMemStoreImpl implements PMemStore{
             PMemStoreSnapshot snapshot = new PMemStoreSnapshot(snapshotId,
                     snapshotRowInMem.size(),
                     snapshotSize,
-                    getScanner(this.snapshotRowInMem),
+                    getScanner(this.snapshotRowInMem, null),
                     startkey, endkey);
 
             this.startkey = null;
@@ -261,16 +269,16 @@ public class PMemStoreImpl implements PMemStore{
      * @return {@link PMemStoreScanner}
      */
     @Override
-    public RowScanner getScanner() {
-        return new PMemStoreScanner(this.rowInMem);
+    public RowScanner getScanner(Scan scan) {
+        return new PMemStoreScanner(this.rowInMem, scan);
     }
 
-    public RecordScanner getSnapshotScanner(){
-        return new PMemStoreScanner(snapshotRowInMem);
+    public RecordScanner getSnapshotScanner(Scan scan){
+        return new PMemStoreScanner(snapshotRowInMem, scan);
     }
 
-    public RowScanner getScanner(Map<byte[], Mutation> rowInMem) {
-        return new PMemStoreScanner(rowInMem);
+    public RowScanner getScanner(Map<byte[], Mutation> rowInMem, Scan scan) {
+        return new PMemStoreScanner(rowInMem, scan);
     }
 
     /**
@@ -279,16 +287,16 @@ public class PMemStoreImpl implements PMemStore{
      * @param startkey
      * @return
      */
-    public ScannerHeap getRecordScanner(byte[] startkey){
+    public ScannerHeap getRecordScanner(byte[] startkey, Scan scan){
 
         List<RecordScanner> scanners = new LinkedList<>();
         if( ! snapshotRowInMem.isEmpty() ) {
-            PMemStoreScanner snapshotScanner = new PMemStoreScanner(snapshotRowInMem);
+            PMemStoreScanner snapshotScanner = new PMemStoreScanner(snapshotRowInMem, scan);
             snapshotScanner.seek(startkey);
             scanners.add(snapshotScanner);
         }
         if( ! rowInMem.isEmpty() ){
-            PMemStoreScanner memStoreScanner = new PMemStoreScanner(rowInMem);
+            PMemStoreScanner memStoreScanner = new PMemStoreScanner(rowInMem, scan);
             memStoreScanner.seek(startkey);
             scanners.add(memStoreScanner);
         }
@@ -322,17 +330,47 @@ public class PMemStoreImpl implements PMemStore{
      */
     class PMemStoreScanner implements RowScanner, InternalRecordScanner{
 
+       // private final Logger LOG = LoggerFactory.getLogger(PMemStoreScanner.class);
+
         private byte[] curr = null;
         private byte[] next = null;
         private Iterator<byte []> it =null;
         private int countLeft = 0;
+        private List<byte[]> filterColumns = new LinkedList<>();
+
 
         private Map<byte[], Mutation> rowInMem;
 
-        public PMemStoreScanner(Map<byte[], Mutation> rowInMem){
+        public PMemStoreScanner(Map<byte[], Mutation> rowInMem, Scan scan){
             this.rowInMem = rowInMem;
             countLeft = rowInMem.size();
+            initScanFilter(scan);
             seek();
+        }
+
+        /**
+         * init the scan filter with the read schema
+         * @param scan
+         */
+        public void initScanFilter(Scan scan){
+            String schema = new String(scan.getAttribute(HConstants.SCAN_TABLE_SCHEMA));
+            try {
+                if (scan != null && schema != null && !schema.isEmpty()) {
+                    MessageType readSchema = MessageTypeParser.parseMessageType(schema);
+                    //readSchema.getFields();
+                    List<Type>  types = readSchema.getFields();
+                    for(Type type : types){
+                        String  columnName = type.getName();
+                        if(columnName.startsWith("cf"))// fetch the real column name
+                            columnName = columnName.substring(3);
+                        filterColumns.add(columnName.getBytes());
+                    }
+
+                }
+            }catch (Exception e){
+                //TODO: send the exception back to the client
+                LOG.error("parse the message schema error" + e);
+            }
         }
 
         /**
@@ -451,7 +489,8 @@ public class PMemStoreImpl implements PMemStore{
                     CellScanner scanner = m.cellScanner();
                     while (scanner.advance()){
                         Cell cell = scanner.current();
-                        cells.add(cell);
+                        if(match(cell))
+                            cells.add(cell);
                     }
                 }
             }catch (IOException ioe){
@@ -459,6 +498,25 @@ public class PMemStoreImpl implements PMemStore{
             }
 
             return cells;
+        }
+
+        /**
+         * judge whether the cell is accepted by the readSchema
+         * @param cell
+         * @return
+         */
+        private boolean match(Cell cell){
+            if(filterColumns.isEmpty()) return true;
+            else {
+                boolean isMatched = false;
+                for(byte[] column : filterColumns){
+                    if(CellUtil.matchingQualifier(cell, column)) {
+                        isMatched = true;
+                        return isMatched;
+                    }
+                }
+                return isMatched;
+            }
         }
 
         /**
@@ -509,6 +567,20 @@ public class PMemStoreImpl implements PMemStore{
             curr = null;
             next = null;
         }
+    }
+
+    public static void main(String []args){
+        MessageType schema = MessageTypeParser.parseMessageType( //parquet文件模式
+                " message people { " +
+
+                        "required binary rowkey;" +
+                        "required binary cf:name;" +
+                        "required binary cf:age;" +
+                        "required int64 timestamp;"+
+                        " }");
+
+
+
     }
 
 }

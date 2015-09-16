@@ -2745,7 +2745,7 @@ public class HStore implements Store {
             byte[] startRow = scan.getStartRow();
 
             //add memstore scanner
-            RecordScanner memScanner = this.pMemStore.getScanner();
+            RecordScanner memScanner = this.pMemStore.getScanner(scan);
 
             if(pMemStore.size() > 0 && pMemStore.getEndKey() != null && Bytes.compareTo(startRow, this.pMemStore.getEndKey()) <= 0){
                 memScanner.seek(startRow);
@@ -2755,7 +2755,7 @@ public class HStore implements Store {
             }
 
             //add memstore snapshot scanner
-            RecordScanner snapshotScanner = pMemStore.getSnapshotScanner();
+            RecordScanner snapshotScanner = pMemStore.getSnapshotScanner(scan);
             snapshotScanner.seek(startRow);
             if(snapshotScanner.hasNext()){
                 scanners.add(snapshotScanner);

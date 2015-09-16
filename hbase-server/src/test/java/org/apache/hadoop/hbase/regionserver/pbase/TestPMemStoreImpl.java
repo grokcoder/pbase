@@ -4,7 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.regionserver.InternalRecordScanner;
 import org.apache.hadoop.hbase.regionserver.RowScanner;
 import org.apache.hadoop.hbase.regionserver.memstore.PMemStore;
 import org.apache.hadoop.hbase.regionserver.memstore.PMemStoreImpl;
@@ -90,12 +93,11 @@ public class TestPMemStoreImpl {
 
 
 
-
     @Test
     public void testGetScanner(){
         initMemStore();
 
-        RowScanner scanner = memStore.getScanner();
+        RowScanner scanner = memStore.getScanner(null);
 
         for(int i = 1; i<= 100; ++i){
             Assert.assertEquals("should has next", true, scanner.hasNext());
@@ -111,15 +113,34 @@ public class TestPMemStoreImpl {
             //test result
         }
 
-
         memStore = new PMemStoreImpl(HBaseConfiguration.create());
+    }
+
+    @Test
+    public void testScanWithSchema(){
+        initMemStore();
+        Scan scan = new Scan();
+        String scanSchema = " message people { " +
+                "required binary cf:name;" +
+               // "required binary cf:age;" +
+                " }";
+        scan.setAttribute(HConstants.SCAN_TABLE_SCHEMA, scanSchema.getBytes());
+
+        RowScanner scanner = memStore.getScanner(scan);
+        InternalRecordScanner iscanner = (InternalRecordScanner) scanner;
+        while (iscanner.hasNext()){
+            List<Cell> cells = iscanner.next();
+            for(Cell cell: cells){
+                //System.out.println(new String(cell.getQualifier()) + " " + new String(cell.getValue()));
+            }
+        }
     }
 
     @Test
     public void testScannerSeek(){
         initMemStore();
 
-        RowScanner scanner = memStore.getScanner();
+        RowScanner scanner = memStore.getScanner(null);
         scanner.seek(String.format("%10d", 0).getBytes());
 
         List<Cell> peek = scanner.peek();
@@ -145,6 +166,9 @@ public class TestPMemStoreImpl {
 
         memStore = new PMemStoreImpl(HBaseConfiguration.create());
     }
+
+
+
 
 
 

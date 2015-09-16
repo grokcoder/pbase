@@ -1,6 +1,7 @@
 package org.apache.hadoop.hbase.regionserver.memstore;
 
 import org.apache.hadoop.hbase.client.Mutation;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.HeapSize;
 import org.apache.hadoop.hbase.regionserver.MemStoreSnapshot;
 import org.apache.hadoop.hbase.regionserver.RecordScanner;
@@ -31,19 +32,19 @@ public  interface PMemStore extends HeapSize{
      * create scanner for {@link PMemStore}
      * @return {@link RowScanner}
      */
-    RowScanner getScanner();
+    RowScanner getScanner(Scan scan);
 
     /**
      * create scanner for {@link PMemStore}
      * @return {@link RowScanner}
      */
-    RowScanner getScanner(Map<byte[], Mutation> mutations);
+    RowScanner getScanner(Map<byte[], Mutation> mutations, Scan scan);
 
     /**
      * create scanner for {@link PMemStore} snapshot
      * @return {@link RecordScanner}
      */
-    RecordScanner getSnapshotScanner();
+    RecordScanner getSnapshotScanner(Scan scan);
 
     /**
      * Clears the current snapshot of the Memstore.

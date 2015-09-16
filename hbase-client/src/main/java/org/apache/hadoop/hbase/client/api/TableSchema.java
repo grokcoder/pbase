@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Created by wangxiaoyi on 15/6/30.
  * <p/>
- * Construct the schema of
+ * Construct the schema of Table
  */
 public class TableSchema {
 
