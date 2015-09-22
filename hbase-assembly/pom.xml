@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <artifactId>hbase</artifactId>
+        <groupId>org.apache.hbase</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>hbase-assembly</artifactId>
+
+    <name>HBase - Assembly</name>
+
+
+    <build>
+        <plugins>
+
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven.assembly.version}</version>
+                <configuration>
+                    <!--Else will use hbase-assembly as final name.-->
+                    <finalName>hbase-${project.version}</finalName>
+                    <skipAssembly>false</skipAssembly>
+                    <appendAssemblyId>true</appendAssemblyId>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                    <descriptors>
+                        <descriptor>${assembly.file}</descriptor>
+                    </descriptors>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+<!--
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        &lt;!&ndash; generates the file that will be used by the bin/hbase script in the dev env &ndash;&gt;
+                        <id>create-hbase-generated-classpath</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.parent.basedir}/target/cached_classpath.txt</outputFile>
+                        </configuration>
+                    </execution>
+                    &lt;!&ndash;
+                       Build an aggregation of our templated NOTICE file and the NOTICE files in our dependencies.
+                       If MASSEMBLY-382 is fixed we could do this in the assembly
+                       Currently relies on env, bash, find, and cat.
+                    &ndash;&gt;
+                    <execution>
+                        &lt;!&ndash; put all of the NOTICE files out of our dependencies &ndash;&gt;
+                        <id>unpack-dependency-notices</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <useSubDirectoryPerArtifact>true</useSubDirectoryPerArtifact>
+                            <includes>**\/NOTICE,**\/NOTICE.txt</includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>-->
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <id>concat-NOTICE-files</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>env</executable>
+                            <arguments>
+                                <argument>bash</argument>
+                                <argument>-c</argument>
+                                <argument>cat maven-shared-archive-resources/META-INF/NOTICE \
+                                    `find ${project.build.directory}/dependency -iname NOTICE -or -iname NOTICE.txt` \
+                                </argument>
+                            </arguments>
+                            <outputFile>${project.build.directory}/NOTICE.aggregate</outputFile>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- /end building aggregation of NOTICE files -->
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+
+        </plugins>
+    </build>
+
+    <dependencies>
+<!--
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-hadoop-compat</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>${compat.module}</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-shell</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+-->
+
+    </dependencies>
+
+
+</project>

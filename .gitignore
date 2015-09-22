@@ -23,3 +23,4 @@ hbase-*/test
 *.iws
 *.ipr
 patchprocess/
+.log/

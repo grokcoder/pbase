@@ -56,6 +56,7 @@
     <module>hbase-prefix-tree</module>
     <module>hbase-annotations</module>
     <module>hbase-parquet</module>
+    <module>hbase-assembly</module>
   </modules>
   <!--Add apache snapshots in case we want to use unreleased versions of plugins:
       e.g. surefire 2.18-SNAPSHOT-->
@@ -759,11 +760,32 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven.assembly.version}</version>
           <configuration>
-            <!--Defer to the hbase-assembly sub-module.  It
-             does all assembly-->
             <skipAssembly>true</skipAssembly>
           </configuration>
         </plugin>
+
+       <!-- <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>copy</id>
+              <phase>package</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>
+                  target/lib/
+                </outputDirectory>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+-->
+
+
+
         <plugin>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-maven-plugins</artifactId>
